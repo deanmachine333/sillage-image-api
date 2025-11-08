@@ -8,7 +8,8 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "brand or name required" });
   }
 
-  const query = `${brand} ${name} perfume bottle`;
+  // RapidAPI expects "keyword" instead of "q"
+  const keyword = `${brand} ${name} perfume bottle`;
 
   try {
     const apiKey = process.env.BING_API_KEY;
@@ -16,7 +17,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "missing_api_key" });
     }
 
-    const apiUrl = `https://bing-search-apis.p.rapidapi.com/images/search?q=${encodeURIComponent(query)}&count=1`;
+    const apiUrl = `https://bing-search-apis.p.rapidapi.com/api/rapid/image_search?keyword=${encodeURIComponent(keyword)}&page=0&size=1`;
 
     const response = await fetch(apiUrl, {
       headers: {
@@ -26,7 +27,7 @@ export default async function handler(req, res) {
     });
 
     if (!response.ok) {
-      return res.status(502).json({ error: "search_failed", status: response.status });
+      return res.status(response.status).json({ error: "search_failed", status: response.status });
     }
 
     const data = await response.json();
