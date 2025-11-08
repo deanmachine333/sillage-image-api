@@ -1,4 +1,4 @@
-// pages/api/search-image.js  (or api/search-image.js if not using Next.js)
+// api/search-image.js
 
 export default async function handler(req, res) {
   const brand = (req.query?.brand || "").trim();
@@ -8,7 +8,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "brand or name required" });
   }
 
-  // RapidAPI expects "keyword" instead of "q"
+  // RapidAPI expects "keyword"
   const keyword = `${brand} ${name} perfume bottle`;
 
   try {
@@ -17,7 +17,8 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "missing_api_key" });
     }
 
-    const apiUrl = `https://bing-search-apis.p.rapidapi.com/api/rapid/image_search?keyword=${encodeURIComponent(keyword)}&page=0&size=1`;
+    // Correct RapidAPI endpoint from your snippet
+    const apiUrl = `https://bing-search-apis.p.rapidapi.com/api/rapid/image_search?keyword=${encodeURIComponent(keyword)}&page=0&size=5`;
 
     const response = await fetch(apiUrl, {
       headers: {
@@ -36,6 +37,7 @@ export default async function handler(req, res) {
       return res.json({ found: false });
     }
 
+    // Pick the first image result
     const best = data.value[0];
     return res.json({
       found: true,
