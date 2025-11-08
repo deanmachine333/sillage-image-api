@@ -1,36 +1,37 @@
-// api/search-image.js
-const fetch = require("node-fetch");
+export default async function handler(req, res) {
+  const brand = (req.query.brand || "").trim();
+  const name = (req.query.name || "").trim();
 
-module.exports = async (req, res) => {
+  if (!brand && !name)
+    return res.status(400).json({ error: "brand or name required" });
+
+  const query = `${brand} ${name} perfume bottle`;
+
   try {
-    const brand = (req.query.brand || "").trim();
-    const name = (req.query.name || "").trim();
-    if (!brand && !name) return res.status(400).json({ error: "brand or name required" });
+    const apiKey = process.env.BING_API_KEY;
+    const apiUrl = `https://bing-search-api.p.rapidapi.com/images/search?q=${encodeURIComponent(query)}&count=1`;
 
-    const query = encodeURIComponent(`${brand} ${name} perfume bottle`.trim());
-    const ddgUrl = `https://duckduckgo.com/i.js?q=${query}`;
-
-    const ddgResp = await fetch(ddgUrl, {
-      headers: { "User-Agent": "Mozilla/5.0" }
+    const response = await fetch(apiUrl, {
+      headers: {
+        "X-RapidAPI-Key": apiKey,
+        "X-RapidAPI-Host": "bing-search-api.p.rapidapi.com"
+      }
     });
 
-    if (!ddgResp.ok) return res.status(502).json({ error: "image search failed" });
+    const data = await response.json();
 
-    const ddgJson = await ddgResp.json();
-    if (!ddgJson.results || ddgJson.results.length === 0) {
+    if (!data.value || data.value.length === 0)
       return res.json({ found: false });
-    }
 
-    const best = ddgJson.results[0];
+    const best = data.value[0];
     return res.json({
       found: true,
-      image: best.image,
-      thumbnail: best.thumbnail,
-      title: best.title,
-      source: best.url
+      image: best.contentUrl,
+      title: best.name,
+      source: best.hostPageDisplayUrl
     });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ error: "internal_error", details: err.message });
+    res.status(500).json({ error: "search_failed", details: err.message });
   }
-};
+}
