@@ -1,3 +1,5 @@
+// pages/api/search-image.js  (or api/search-image.js if not using Next.js)
+
 export default async function handler(req, res) {
   const brand = (req.query?.brand || "").trim();
   const name = (req.query?.name || "").trim();
@@ -14,12 +16,12 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "missing_api_key" });
     }
 
-    const apiUrl = `https://bing-image-search1.p.rapidapi.com/images/search?q=${encodeURIComponent(query)}&count=1`;
+    const apiUrl = `https://bing-search-apis.p.rapidapi.com/images/search?q=${encodeURIComponent(query)}&count=1`;
 
     const response = await fetch(apiUrl, {
       headers: {
         "X-RapidAPI-Key": apiKey,
-        "X-RapidAPI-Host": "bing-image-search1.p.rapidapi.com"
+        "X-RapidAPI-Host": "bing-search-apis.p.rapidapi.com"
       }
     });
 
@@ -41,6 +43,7 @@ export default async function handler(req, res) {
       source: best.hostPageDisplayUrl
     });
   } catch (err) {
-    res.status(500).json({ error: "internal_error", details: err.message });
+    console.error("Unhandled error:", err);
+    return res.status(500).json({ error: "internal_error", details: err.message });
   }
 }
