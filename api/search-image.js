@@ -8,21 +8,24 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "brand or name required" });
   }
 
-  const keyword = `${brand} ${name} perfume bottle`;
+  const query = `${brand} ${name} perfume bottle`;
 
   try {
-    const apiKey = process.env.BING_API_KEY;
+    const apiKey = process.env.GOOGLE_API_KEY; // set this in Vercel
     if (!apiKey) {
       return res.status(500).json({ error: "missing_api_key" });
     }
 
-    const apiUrl = `https://bing-search-apis.p.rapidapi.com/api/rapid/image_search?keyword=${encodeURIComponent(keyword)}&page=0&size=5`;
+    const apiUrl = "https://google-api-unlimited.p.rapidapi.com/google/image";
 
     const response = await fetch(apiUrl, {
+      method: "POST",
       headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
         "X-RapidAPI-Key": apiKey,
-        "X-RapidAPI-Host": "bing-search-apis.p.rapidapi.com"
-      }
+        "X-RapidAPI-Host": "google-api-unlimited.p.rapidapi.com"
+      },
+      body: new URLSearchParams({ q: query })
     });
 
     if (!response.ok) {
@@ -31,16 +34,17 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    if (!data.value || data.value.length === 0) {
+    // Adjust parsing based on API response structure
+    if (!data || !data.results || data.results.length === 0) {
       return res.json({ found: false });
     }
 
-    const best = data.value[0];
+    const best = data.results[0];
     return res.json({
       found: true,
-      image: best.contentUrl,
-      title: best.name,
-      source: best.hostPageDisplayUrl
+      image: best.image,
+      title: best.title || `${brand} ${name}`,
+      source: best.link || null
     });
   } catch (err) {
     console.error("Unhandled error:", err);
